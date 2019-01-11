@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using SimpleRenderer.Core;
+using Point = System.Drawing.Point;
 
 namespace SimpleRenderer.Windows
 {

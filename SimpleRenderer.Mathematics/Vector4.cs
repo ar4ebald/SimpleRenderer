@@ -46,6 +46,9 @@ namespace SimpleRenderer.Mathematics
         public static implicit operator Vector4((double X, double Y, double Z, double W) tuple)
             => new Vector4(tuple.X, tuple.Y, tuple.Z, tuple.W);
 
+        public static implicit operator Vector4((Vector3 XYZ, double W) tuple)
+            => new Vector4(tuple.XYZ.X, tuple.XYZ.Y, tuple.XYZ.Z, tuple.W);
+
         public static bool operator ==(Vector4 left, Vector4 right) => left.Equals(right);
         public static bool operator !=(Vector4 left, Vector4 right) => !(left == right);
 

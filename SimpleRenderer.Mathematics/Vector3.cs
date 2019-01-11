@@ -65,8 +65,17 @@ namespace SimpleRenderer.Mathematics
             => new Vector3(dividend.X / divisor, dividend.Y / divisor, dividend.Z / divisor);
 
 
-        public static double Dot(Vector3 left, Vector3 right)
+        public static double Dot(in Vector3 left, in Vector3 right)
             => left.X * right.X + left.Y * right.Y + left.Z * right.Z;
+
+        public static Vector3 Cross(in Vector3 left, in Vector3 right)
+        {
+            return (
+                left.Y * right.Z - left.Z * right.Y,
+                left.Z * right.X - left.X * right.Z,
+                left.X * right.Y - left.Y * right.X
+            );
+        }
 
         public double Length => Math.Sqrt(Dot(this, this));
 

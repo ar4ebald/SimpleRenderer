@@ -38,7 +38,8 @@ namespace SimpleRenderer.Samples.Tree
 
             var worldViewProjection = world * _projection;
 
-            WireframeRenderer.Render(canvas, _model, worldViewProjection, Pixel.Red);
+            FillingRenderer.Render(canvas, _model, worldViewProjection, Pixel.Red);
+            //WireframeRenderer.Render(canvas, _model, worldViewProjection, Pixel.Red);
         }
     }
 }
