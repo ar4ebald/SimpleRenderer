@@ -52,7 +52,7 @@ namespace SimpleRenderer.Windows
             }
 
             using (bitmap)
-                graphics.DrawImage(bitmap, Point.Empty);
+                graphics.DrawImageUnscaled(bitmap, Point.Empty);
         }
 
         void Render()

@@ -53,6 +53,8 @@ namespace SimpleRenderer.Core
             var vertices = new List<Vector3>();
             var indices = new List<int>();
 
+            var faceIndices = new List<int>();
+
             string line;
             for (int lineNum = 1; (line = reader.ReadLine()) != null; lineNum++)
             {
@@ -77,25 +79,35 @@ namespace SimpleRenderer.Core
 
                 if (line.StartsWith(faceLinePrefix))
                 {
-                    var parts = line.Substring(faceLinePrefix.Length)
+                    var faceIdxStrings = line.Substring(faceLinePrefix.Length)
                         .Split(_wavefrontLineSeparator, StringSplitOptions.RemoveEmptyEntries);
 
-                    for (int partIndex = 0; partIndex < parts.Length; ++partIndex)
+                    faceIndices.Clear();
+
+                    foreach (var idxString in faceIdxStrings)
                     {
-                        var indStr = parts[partIndex].Split('/');
+                        var indStr = idxString.Split('/');
+
                         if (indStr.Length < 1)
                             throw new FormatException($"Invalid face format at line {lineNum}");
 
-                        if (!int.TryParse(indStr[0], NumberStyles.None, CultureInfo.InvariantCulture, out int ind0))
+                        if (!int.TryParse(indStr[0], NumberStyles.None, CultureInfo.InvariantCulture, out int index))
                             throw new FormatException($"Invalid face format at line {lineNum}");
 
-                        if (partIndex > 2)
-                        {
-                            indices.Add(indices[indices.Count - 2]);
-                            indices.Add(indices[indices.Count - 1]);
-                        }
+                        faceIndices.Add(index - 1);
+                    }
 
-                        indices.Add(ind0 - 1);
+                    if (faceIndices.Count < 3)
+                        throw new FormatException($"Less than 3 indices at line {lineNum}");
+
+                    indices.Add(faceIndices[0]);
+                    indices.Add(faceIndices[1]);
+                    indices.Add(faceIndices[2]);
+                    for (int i = 3; i < faceIndices.Count; ++i)
+                    {
+                        indices.Add(faceIndices[i - 3]);
+                        indices.Add(faceIndices[i - 1]);
+                        indices.Add(faceIndices[i - 0]);
                     }
                 }
             }
