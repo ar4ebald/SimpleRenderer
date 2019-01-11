@@ -16,14 +16,14 @@ namespace SimpleRenderer.Samples.Tree
         }
 
         readonly Model _model;
-        readonly Pixel _wireframeColor;
+        readonly Matrix _projection;
 
         public Program()
         {
-            //_model = Model.CreatePlane(0.5);
             using (var reader = new StreamReader("Lowpoly_tree_sample.obj"))
                 _model = Model.ReadWavefrontObj(reader);
-            _wireframeColor = Pixel.Red;
+
+            _projection = Matrix.Perspective(Math.PI / 180 * 60, 1, 0.1, 1000);
         }
 
         protected override void Update()
@@ -33,26 +33,12 @@ namespace SimpleRenderer.Samples.Tree
 
         protected override void Render(Canvas canvas)
         {
-            for (int i = 0; i < _model.Indices.Count; i += 3)
-            {
-                canvas.DrawLine(
-                    (Vector2)_model.Vertices[_model.Indices[i + 0]],
-                    (Vector2)_model.Vertices[_model.Indices[i + 1]],
-                    _wireframeColor
-                );
+            var t = DateTime.Now.TimeOfDay.TotalSeconds;
+            var world = Matrix.Scale(new Vector3(0.025)) * Matrix.Rotation((0, 1, 0), -t) * Matrix.Translation((0, -0.4, 1));
 
-                canvas.DrawLine(
-                    (Vector2)_model.Vertices[_model.Indices[i + 1]],
-                    (Vector2)_model.Vertices[_model.Indices[i + 2]],
-                    _wireframeColor
-                );
+            var worldViewProjection = world * _projection;
 
-                canvas.DrawLine(
-                    (Vector2)_model.Vertices[_model.Indices[i + 2]],
-                    (Vector2)_model.Vertices[_model.Indices[i + 0]],
-                    _wireframeColor
-                );
-            }
+            WireframeRenderer.Render(canvas, _model, worldViewProjection, Pixel.Red);
         }
     }
 }

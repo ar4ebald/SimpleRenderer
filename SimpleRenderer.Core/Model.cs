@@ -71,7 +71,7 @@ namespace SimpleRenderer.Core
                         throw new FormatException($"Failed to parse coordinate at line {lineNum}");
                     }
 
-                    vertices.Add(new Vector3(x, y, z) * 0.1);
+                    vertices.Add(new Vector3(x, y, z));
                     continue;
                 }
 

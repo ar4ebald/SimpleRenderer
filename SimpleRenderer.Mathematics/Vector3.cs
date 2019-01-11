@@ -44,6 +44,13 @@ namespace SimpleRenderer.Mathematics
         public static implicit operator Vector3((double X, double Y, double Z) tuple)
             => new Vector3(tuple.X, tuple.Y, tuple.Z);
 
+        public void Deconstruct(out double x, out double y, out double z)
+        {
+            x = X;
+            y = Y;
+            z = Z;
+        }
+
         public static bool operator ==(Vector3 left, Vector3 right) => left.Equals(right);
         public static bool operator !=(Vector3 left, Vector3 right) => !(left == right);
 
