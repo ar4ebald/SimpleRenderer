@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using SimpleRenderer.Core;
 using SimpleRenderer.Windows;
 
 namespace SimpleRenderer.Samples.Tree
@@ -12,18 +13,19 @@ namespace SimpleRenderer.Samples.Tree
             Application.Run(new Program());
         }
 
-        protected override void Update()
+        public Program()
         {
-            
+            BackgroundColor = Pixel.Red;
         }
 
-        protected override void Render()
+        protected override void Update()
         {
-            using (var g = CreateGraphics())
-            {
-                
-                g.DrawLine(Pens.Blue, 0, 0, g.VisibleClipBounds.Width, g.VisibleClipBounds.Height);
-            }
+
+        }
+
+        protected override void Render(Canvas canvas)
+        {
+
         }
     }
 }

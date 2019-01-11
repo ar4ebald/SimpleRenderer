@@ -2,24 +2,35 @@
 
 namespace SimpleRenderer.Core
 {
-    public class Canvas
+    public sealed class Canvas
     {
-        public int Width { get; }
-        public int Height { get; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
 
-        public Pixel[] RawPixels { get; }
+        public Pixel[] RawPixels { get; private set; }
 
-        public Canvas(int width, int height)
+        public Canvas()
         {
-            Width  = width;
-            Height = height;
+            RawPixels = Array.Empty<Pixel>();
+        }
 
-            RawPixels = new Pixel[Width * Height];
+        public void EnsureSize(int width, int height)
+        {
+            if (Width * Height >= width * height)
+                return;
+
+            var array = RawPixels;
+            Array.Resize(ref array, width * height);
+            RawPixels = array;
+
+            Width = width;
+            Height = height;
         }
 
         public void Fill(Pixel pixel)
         {
-            for (int i = 0; i < RawPixels.Length; ++i)
+            int length = Width * Height;
+            for (int i = 0; i < length; ++i)
                 RawPixels[i] = pixel;
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using SimpleRenderer.Core;
@@ -8,11 +9,15 @@ namespace SimpleRenderer.Windows
 {
     public abstract class HostForm : Form
     {
-        protected Pixel BackgroundColor = new Pixel();
+        readonly Canvas _canvas;
+
+        protected Pixel BackgroundColor = Pixel.CornflowerBlue;
 
         protected HostForm()
         {
             Application.Idle += HandleApplicationIdle;
+
+            _canvas = new Canvas();
         }
 
         static bool IsApplicationIdle()
@@ -31,11 +36,35 @@ namespace SimpleRenderer.Windows
 
         protected new abstract void Update();
 
+        unsafe void Display(Canvas canvas, Graphics graphics)
+        {
+            Bitmap bitmap;
+            fixed (Pixel* ptr = &canvas.RawPixels[0])
+            {
+                bitmap = new Bitmap(
+                    canvas.Width, canvas.Height,
+                    Pixel.Size * canvas.Width,
+                    PixelFormat.Format24bppRgb,
+                    new IntPtr(ptr)
+                );
+            }
+
+            using (bitmap)
+                graphics.DrawImage(bitmap, Point.Empty);
+        }
+
         void Render()
         {
             using (var g = CreateGraphics())
             {
+                var width = (int)g.VisibleClipBounds.Width;
+                var height = (int)g.VisibleClipBounds.Height;
 
+                _canvas.EnsureSize(width, height);
+                _canvas.Fill(BackgroundColor);
+
+                Render(_canvas);
+                Display(_canvas, g);
             }
         }
 
@@ -45,11 +74,11 @@ namespace SimpleRenderer.Windows
         public struct NativeMessage
         {
             public IntPtr Handle;
-            public uint   Message;
+            public uint Message;
             public IntPtr WParameter;
             public IntPtr LParameter;
-            public uint   Time;
-            public Point  Location;
+            public uint Time;
+            public Point Location;
         }
 
         [DllImport("user32.dll")]
