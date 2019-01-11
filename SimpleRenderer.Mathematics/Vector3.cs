@@ -41,6 +41,9 @@ namespace SimpleRenderer.Mathematics
 
         public override string ToString() => $"({X:N4}, {Y:N4}, {Z:N4})";
 
+        public static implicit operator Vector3((double X, double Y, double Z) tuple)
+            => new Vector3(tuple.X, tuple.Y, tuple.Z);
+
         public static bool operator ==(Vector3 left, Vector3 right) => left.Equals(right);
         public static bool operator !=(Vector3 left, Vector3 right) => !(left == right);
 
