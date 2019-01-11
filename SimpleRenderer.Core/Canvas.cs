@@ -96,7 +96,7 @@ namespace SimpleRenderer.Core
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void HorizontalLine(int left, int right, int y, Pixel color)
+        void HorizontalLine(Point t0, Point t1, Point t2, int left, int right, int y, ColorFactory factory)
         {
             if (left > right)
                 (left, right) = (right, left);
@@ -104,18 +104,36 @@ namespace SimpleRenderer.Core
             left  = Math.Max(0, left);
             right = Math.Min(Width - 1, right);
 
+            int dy12 = t1.Y - t2.Y;
+            int dy20 = t2.Y - t0.Y;
+            int dx21 = t2.X - t1.X;
+            int dx02 = t0.X - t2.X;
+            int dy2 = y - t2.Y;
+            double det = dy12 * dx02 - dx21 * dy20;
+
             int scan = y * Width;
             for (int x = left; x <= right; ++x)
-                RawPixels[scan + x] = color;
+            {
+                int dx2 = (x - t2.X);
+                var alpha0 = (dy12 * dx2 + dx21 * dy2) / det;
+                var alpha1 = (dy20 * dx2 + dx02 * dy2) / det;
+                var alpha2 = 1 - alpha0 - alpha1;
+
+                RawPixels[scan + x] = factory(new Vector3(alpha0, alpha1, alpha2));
+            }
         }
 
-        public void DrawTriangle(Vector2 p0, Vector2 p1, Vector2 p2, Pixel color)
-        {
-            var array = RawPixels;
+        public delegate Pixel ColorFactory(Vector3 barycentric);
 
+        public void DrawTriangle(Vector2 p0, Vector2 p1, Vector2 p2, ColorFactory factory)
+        {
             var t0 = ScreenToIndex(p0);
             var t1 = ScreenToIndex(p1);
             var t2 = ScreenToIndex(p2);
+
+            double m = t0.X * t1.Y - t0.X * t2.Y - t1.X * t0.Y + t1.X * t2.Y + t2.X * t0.Y - t2.X * t1.Y;
+            if (m < 0)
+                return;
 
             if (t0.Y > t1.Y) (t0, t1) = (t1, t0);
             if (t0.Y > t2.Y) (t0, t2) = (t2, t0);
@@ -136,7 +154,7 @@ namespace SimpleRenderer.Core
                 int left  = GetBorder(t0, t1, y);
                 int right = GetBorder(t0, t2, y);
 
-                HorizontalLine(left, right, y, color);
+                HorizontalLine(t0, t1, t2, left, right, y, factory);
             }
 
             if (t1.Y >= Height)
@@ -146,7 +164,7 @@ namespace SimpleRenderer.Core
                 int left  = t1.X;
                 int right = t1.Y == t2.Y ? t2.X : GetBorder(t0, t2, t1.Y);
 
-                HorizontalLine(left, right, t1.Y, color);
+                HorizontalLine(t0, t1, t2, left, right, t1.Y, factory);
             }
 
             yMax = Math.Min(t2.Y, Height - 1);
@@ -155,7 +173,7 @@ namespace SimpleRenderer.Core
                 int left  = GetBorder(t1, t2, y);
                 int right = GetBorder(t0, t2, y);
 
-                HorizontalLine(left, right, y, color);
+                HorizontalLine(t0, t1, t2, left, right, y, factory);
             }
         }
     }

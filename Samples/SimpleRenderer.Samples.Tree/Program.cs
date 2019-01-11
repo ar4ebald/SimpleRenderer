@@ -38,8 +38,17 @@ namespace SimpleRenderer.Samples.Tree
 
             var worldViewProjection = world * _projection;
 
-            FillingRenderer.Render(canvas, _model, worldViewProjection, Pixel.Red);
+            FillingRenderer.Render(canvas, _model, worldViewProjection, Shader);
             //WireframeRenderer.Render(canvas, _model, worldViewProjection, Pixel.Red);
+        }
+
+        Pixel Shader(int idx0, int idx1, int idx2, Vector3 barycentric)
+        {
+            return new Pixel(
+                (byte)(byte.MaxValue * barycentric.X),
+                (byte)(byte.MaxValue * barycentric.Y),
+                (byte)(byte.MaxValue * barycentric.Z)
+            );
         }
     }
 }
