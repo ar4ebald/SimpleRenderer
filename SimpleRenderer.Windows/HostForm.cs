@@ -17,6 +17,8 @@ namespace SimpleRenderer.Windows
         {
             Application.Idle += HandleApplicationIdle;
 
+            Size = SizeFromClientSize(new Size(800, 800));
+
             _canvas = new Canvas();
         }
 

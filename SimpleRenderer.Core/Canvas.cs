@@ -64,7 +64,8 @@ namespace SimpleRenderer.Core
 
             for (; ; )
             {
-                RawPixels[y0 * Width + x0] = pixel;
+                if (y0 >= 0 && y0 < Height && x0 >= 0 && x0 < Width)
+                    RawPixels[y0 * Width + x0] = pixel;
 
                 if (x0 == x1 && y0 == y1)
                     break;

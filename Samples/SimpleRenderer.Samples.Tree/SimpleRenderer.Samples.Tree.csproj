@@ -8,6 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Lowpoly_tree_sample.obj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Lowpoly_tree_sample.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\SimpleRenderer.Windows\SimpleRenderer.Windows.csproj" />
   </ItemGroup>
 
