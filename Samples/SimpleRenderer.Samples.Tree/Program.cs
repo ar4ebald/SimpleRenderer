@@ -20,6 +20,8 @@ namespace SimpleRenderer.Samples.Tree
 
         public Program()
         {
+            Size = SizeFromClientSize(new Size(600, 600));
+
             using (var reader = new StreamReader("Lowpoly_tree_sample.obj"))
                 _model = Model.ReadWavefrontObj(reader);
 
@@ -39,16 +41,22 @@ namespace SimpleRenderer.Samples.Tree
             var worldViewProjection = world * _projection;
 
             FillingRenderer.Render(canvas, _model, worldViewProjection, Shader);
-            //WireframeRenderer.Render(canvas, _model, worldViewProjection, Pixel.Red);
         }
 
-        Pixel Shader(int idx0, int idx1, int idx2, Vector3 barycentric)
+        Pixel Shader(int idx0, int idx1, int idx2, in Vector3 barycentric)
         {
-            return new Pixel(
+            var color = new Pixel(
                 (byte)(byte.MaxValue * barycentric.X),
                 (byte)(byte.MaxValue * barycentric.Y),
                 (byte)(byte.MaxValue * barycentric.Z)
             );
+
+            //var depth = Vector3.Dot(
+            //    (_model.Vertices[idx0].Z, _model.Vertices[idx1].Z, _model.Vertices[idx2].Z),
+            //    barycentric
+            //);
+
+            return color;
         }
     }
 }

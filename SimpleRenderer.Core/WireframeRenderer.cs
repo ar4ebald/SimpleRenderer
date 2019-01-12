@@ -27,8 +27,8 @@ namespace SimpleRenderer.Core
                     homo1 = worldViewProjection * homo1;
 
                     canvas.DrawLine(
-                        (homo0.X / homo0.W, homo0.Y / homo0.W),
-                        (homo1.X / homo1.W, homo1.Y / homo1.W),
+                        (homo0.X / homo0.W, homo0.Y / homo0.W, homo0.Z / homo0.W),
+                        (homo1.X / homo1.W, homo1.Y / homo1.W, homo1.Z / homo1.W),
                         color
                     );
                 }

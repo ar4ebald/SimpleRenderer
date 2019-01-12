@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SimpleRenderer.Core
+namespace SimpleRenderer.Mathematics
 {
     public struct Point : IEquatable<Point>
     {
@@ -26,6 +26,10 @@ namespace SimpleRenderer.Core
 
         public override string ToString() => $"(X:{X}, Y:{Y})";
 
+        public static int Cross(Point left, Point right)
+        {
+            return left.X * right.Y - left.Y * right.X;
+        }
 
         public static implicit operator Point((int X, int Y) tuple)
             => new Point(tuple.X, tuple.Y);
@@ -36,4 +40,5 @@ namespace SimpleRenderer.Core
         public static Point operator -(Point left, Point right)
             => (left.X - right.X, left.Y - right.Y);
     }
+
 }

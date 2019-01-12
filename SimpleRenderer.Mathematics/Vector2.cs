@@ -62,6 +62,9 @@ namespace SimpleRenderer.Mathematics
         public static double Dot(Vector2 left, Vector2 right)
             => left.X * right.X + left.Y * right.Y;
 
+        public static double Cross(Vector2 left, Vector2 right)
+            => left.X * right.Y - left.Y * right.X;
+
         public double Length => Math.Sqrt(Dot(this, this));
 
         public Vector2 Normalized => this / Length;

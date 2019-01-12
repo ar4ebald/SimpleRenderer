@@ -18,8 +18,6 @@ namespace SimpleRenderer.Windows
         {
             Application.Idle += HandleApplicationIdle;
 
-            Size = SizeFromClientSize(new Size(800, 800));
-
             _canvas = new Canvas();
         }
 
@@ -42,7 +40,7 @@ namespace SimpleRenderer.Windows
         unsafe void Display(Canvas canvas, Graphics graphics)
         {
             Bitmap bitmap;
-            fixed (Pixel* ptr = &canvas.RawPixels[0])
+            fixed (Pixel* ptr = &canvas.ColorBuffer[0])
             {
                 bitmap = new Bitmap(
                     canvas.Width, canvas.Height,
@@ -64,7 +62,7 @@ namespace SimpleRenderer.Windows
                 var height = (int)g.VisibleClipBounds.Height;
 
                 _canvas.EnsureSize(width, height);
-                _canvas.Fill(BackgroundColor);
+                _canvas.Clear(BackgroundColor, double.MaxValue);
 
                 Render(_canvas);
                 Display(_canvas, g);

@@ -19,6 +19,9 @@ namespace SimpleRenderer.Mathematics
             W = w;
         }
 
+        public Vector2 XY => (X, Y);
+        public Vector3 XYZ => (X, Y, Z);
+
         public bool Equals(Vector4 other)
         {
             return X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z) && W.Equals(other.W);
