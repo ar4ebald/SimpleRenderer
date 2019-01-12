@@ -218,10 +218,25 @@ namespace SimpleRenderer.Core
                     if (gammaDividend * detSign < 0)
                         continue;
 
+
+                    Vector3 barycentric = (
+                        alphaDividend / (p0.Z * det),
+                        betaDividend / (p1.Z * det),
+                        gammaDividend / (p2.Z * det)
+                    );
+                    barycentric /= (barycentric.X + barycentric.Y + barycentric.Z);
+
+                    double depth = Vector3.Dot(barycentric, (p0.Z, p1.Z, p2.Z));
+
+                    if (depth > DepthBuffer[scan])
+                        continue;
+
+                    DepthBuffer[scan] = depth;
+
                     Pixel color = new Pixel(
-                        (byte)(byte.MaxValue * alphaDividend / det),
-                        (byte)(byte.MaxValue * betaDividend / det),
-                        (byte)(byte.MaxValue * gammaDividend / det)
+                        (byte)(byte.MaxValue * barycentric.X),
+                        (byte)(byte.MaxValue * barycentric.Y),
+                        (byte)(byte.MaxValue * barycentric.Z)
                     );
                     ColorBuffer[scan] = color;
                 }
