@@ -13,12 +13,12 @@ namespace SimpleRenderer.Core
 
         public static void Render(Canvas canvas, Model model, Matrix worldViewProjection, Pixel color)
         {
-            for (int i = 0; i < model.Indices.Count; i += 3)
+            for (int i = 0; i < model.VerticesIndices.Count; i += 3)
             {
                 for (int j = 0; j < _indicesOffsets.Length; j += 2)
                 {
-                    var vertex0 = model.Vertices[model.Indices[i + _indicesOffsets[j + 0]]];
-                    var vertex1 = model.Vertices[model.Indices[i + _indicesOffsets[j + 1]]];
+                    var vertex0 = model.Vertices[model.VerticesIndices[i + _indicesOffsets[j + 0]]];
+                    var vertex1 = model.Vertices[model.VerticesIndices[i + _indicesOffsets[j + 1]]];
 
                     Vector4 homo0 = (vertex0.X, vertex0.Y, vertex0.Z, 1);
                     Vector4 homo1 = (vertex1.X, vertex1.Y, vertex1.Z, 1);

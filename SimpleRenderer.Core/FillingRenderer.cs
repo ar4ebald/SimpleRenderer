@@ -9,11 +9,11 @@ namespace SimpleRenderer.Core
 
         public static void Render(Canvas canvas, Model model, Matrix worldViewProjection, PixelShader shader)
         {
-            for (int i = 0; i < model.Indices.Count; i += 3)
+            for (int i = 0; i < model.VerticesIndices.Count; i += 3)
             {
-                var idx0 = model.Indices[i + 0];
-                var idx1 = model.Indices[i + 1];
-                var idx2 = model.Indices[i + 2];
+                var idx0 = model.VerticesIndices[i + 0];
+                var idx1 = model.VerticesIndices[i + 1];
+                var idx2 = model.VerticesIndices[i + 2];
 
                 Vector4 homo0 = worldViewProjection * (model.Vertices[idx0], 1);
                 Vector4 homo1 = worldViewProjection * (model.Vertices[idx1], 1);
@@ -23,7 +23,7 @@ namespace SimpleRenderer.Core
                     homo0,
                     homo1,
                     homo2,
-                    (in Vector3 barycentric) => shader(idx0, idx1, idx2, barycentric)
+                    (in Vector3 barycentric) => shader(i, i + 1, i + 2, barycentric)
                 );
             }
         }

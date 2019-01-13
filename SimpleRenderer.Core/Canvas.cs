@@ -232,18 +232,9 @@ namespace SimpleRenderer.Core
                         continue;
 
                     DepthBuffer[scan] = depth;
-
-                    Pixel color = new Pixel(
-                        (byte)(byte.MaxValue * barycentric.X),
-                        (byte)(byte.MaxValue * barycentric.Y),
-                        (byte)(byte.MaxValue * barycentric.Z)
-                    );
-                    ColorBuffer[scan] = color;
+                    ColorBuffer[scan] = factory(barycentric);
                 }
             }
         }
-
-
-
     }
 }

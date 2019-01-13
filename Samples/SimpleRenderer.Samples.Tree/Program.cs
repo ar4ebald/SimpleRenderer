@@ -17,6 +17,7 @@ namespace SimpleRenderer.Samples.Tree
 
         readonly Model _model;
         readonly Matrix _projection;
+        readonly Vector3 _lightDirection;
 
         public Program()
         {
@@ -26,6 +27,8 @@ namespace SimpleRenderer.Samples.Tree
                 _model = Model.ReadWavefrontObj(reader);
 
             _projection = Matrix.Perspective(Math.PI / 180 * 60, 1, 0.1, 1000);
+
+            _lightDirection = new Vector3(1, 1, 1).Normalized;
         }
 
         protected override void Update()
@@ -45,11 +48,17 @@ namespace SimpleRenderer.Samples.Tree
 
         Pixel Shader(int idx0, int idx1, int idx2, in Vector3 barycentric)
         {
-            var color = new Pixel(
-                (byte)(byte.MaxValue * barycentric.X),
-                (byte)(byte.MaxValue * barycentric.Y),
-                (byte)(byte.MaxValue * barycentric.Z)
-            );
+            //var color = new Pixel(
+            //    (byte)(byte.MaxValue * barycentric.X),
+            //    (byte)(byte.MaxValue * barycentric.Y),
+            //    (byte)(byte.MaxValue * barycentric.Z)
+            //);
+
+            var normal = _model.Normals[_model.NormalsIndices[idx0]];
+            var shade = Vector3.Dot(normal, _lightDirection);
+            shade = Math.Min(1, Math.Max(0, shade * 0.6 + 0.4));
+            byte intensity = (byte)(byte.MaxValue * shade);
+            var color = new Pixel(intensity, intensity, intensity);
 
             //var depth = Vector3.Dot(
             //    (_model.Vertices[idx0].Z, _model.Vertices[idx1].Z, _model.Vertices[idx2].Z),
