@@ -54,7 +54,7 @@ namespace SimpleRenderer.Samples.Tree
             //    (byte)(byte.MaxValue * barycentric.Z)
             //);
 
-            var normal = _model.Normals[_model.NormalsIndices[idx0]];
+            var normal = _model.Normals[_model.Indices[idx0].Normal];
             var shade = Vector3.Dot(normal, _lightDirection);
             shade = Math.Min(1, Math.Max(0, shade * 0.6 + 0.4));
             byte intensity = (byte)(byte.MaxValue * shade);
