@@ -15,18 +15,18 @@ namespace SimpleRenderer.Core
 
         static readonly double _twoSqrtHalf = Math.Sqrt(2) / 2;
 
-        Model(IReadOnlyList<Vector3> vertices, IReadOnlyList<Vector2> textureCoords, IReadOnlyList<Vector3> normals, IReadOnlyList<(int Vertex, int Texture, int Normal)> indices)
+        Model(IReadOnlyList<Vector3> vertices, IReadOnlyList<Vector2> textureCoords, IReadOnlyList<Vector3> normals, IReadOnlyList<Face> faces)
         {
             Vertices = vertices;
             TextureCoords = textureCoords;
             Normals = normals;
-            Indices = indices;
+            Faces = faces;
         }
 
         public IReadOnlyList<Vector3> Vertices { get; }
         public IReadOnlyList<Vector2> TextureCoords { get; }
         public IReadOnlyList<Vector3> Normals { get; }
-        public IReadOnlyList<(int Vertex, int Texture, int Normal)> Indices { get; }
+        public IReadOnlyList<Face> Faces { get; }
 
         public static Model CreatePlane(double size)
         {
@@ -53,13 +53,13 @@ namespace SimpleRenderer.Core
                 (0, 0, 1)
             };
 
-            var indices = new[]
+            var faces = new Face[]
             {
                 (0, 0, 0), (1, 1, 1), (3, 3, 3),
                 (1, 1, 1), (2, 2, 2), (3, 3, 3)
             };
 
-            return new Model(vertices, textures, normals, indices);
+            return new Model(vertices, textures, normals, faces);
         }
 
 
@@ -70,7 +70,7 @@ namespace SimpleRenderer.Core
             var vertices = new List<Vector3>();
             var textureCoords = new List<Vector2>();
             var normals = new List<Vector3>();
-            var indices = new List<(int, int, int)>();
+            var faces = new List<Face>();
 
             string line;
             for (int lineNum = 1; (line = reader.ReadLine()) != null; lineNum++)
@@ -82,10 +82,10 @@ namespace SimpleRenderer.Core
                 else if (line.StartsWith(NormalLinePrefix))
                     normals.Add(ReadVector3(line, NormalLinePrefix, lineNum).Normalized);
                 else if (line.StartsWith(FaceLinePrefix))
-                    ReadFace(line, lineNum, indices);
+                    ReadFace(line, lineNum, faces);
             }
 
-            return new Model(vertices, textureCoords, normals, indices);
+            return new Model(vertices, textureCoords, normals, faces);
         }
 
         static Vector3 ReadVector3(string line, string linePrefix, int lineNum)
@@ -123,7 +123,7 @@ namespace SimpleRenderer.Core
             return (x, y);
         }
 
-        static void ReadFace(string line, int lineNum, List<(int Vertex, int Texture, int Normal)> indices)
+        static void ReadFace(string line, int lineNum, List<Face> faces)
         {
             var faceIdxStrings = line.Substring(FaceLinePrefix.Length)
                 .Split(_wavefrontLineSeparator, StringSplitOptions.RemoveEmptyEntries);
@@ -152,15 +152,15 @@ namespace SimpleRenderer.Core
             if (faceIndices.Count < 3)
                 throw new FormatException($"Less than 3 indices at line {lineNum}");
 
-            indices.Add(faceIndices[0]);
-            indices.Add(faceIndices[1]);
-            indices.Add(faceIndices[2]);
+            faces.Add(faceIndices[0]);
+            faces.Add(faceIndices[1]);
+            faces.Add(faceIndices[2]);
 
             for (int i = 3; i < faceIndices.Count; ++i)
             {
-                indices.Add(faceIndices[i - 3]);
-                indices.Add(faceIndices[i - 1]);
-                indices.Add(faceIndices[i - 0]);
+                faces.Add(faceIndices[i - 3]);
+                faces.Add(faceIndices[i - 1]);
+                faces.Add(faceIndices[i - 0]);
             }
         }
     }

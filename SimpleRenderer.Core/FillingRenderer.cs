@@ -1,27 +1,51 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using SimpleRenderer.Mathematics;
 
 namespace SimpleRenderer.Core
 {
+    public delegate (T Vertex, Vector4 Position) VertexShader<T>(in Face face) where T : struct;
+    public delegate Pixel PixelShader<T>(in T input) where T : struct;
+
     public static class FillingRenderer
     {
-        public delegate Pixel PixelShader(int idx0, int idx1, int idx2, in Vector3 barycentric);
-
-        public static void Render(Canvas canvas, Model model, Matrix worldViewProjection, PixelShader shader)
+        public static void Render<T>(Canvas canvas, IReadOnlyList<Face> faces, VertexShader<T> vertexShader, PixelShader<T> pixelShader)
+            where T : unmanaged
         {
-            for (int i = 0; i < model.Indices.Count; i += 3)
+            Parallel.For(0, faces.Count / 3, i =>
             {
-                Vector4 homo0 = worldViewProjection * (model.Vertices[model.Indices[i + 0].Vertex], 1);
-                Vector4 homo1 = worldViewProjection * (model.Vertices[model.Indices[i + 1].Vertex], 1);
-                Vector4 homo2 = worldViewProjection * (model.Vertices[model.Indices[i + 2].Vertex], 1);
+                i *= 3;
+
+                var (vertex0, p0) = vertexShader(faces[i + 0]);
+                var (vertex1, p1) = vertexShader(faces[i + 1]);
+                var (vertex2, p2) = vertexShader(faces[i + 2]);
 
                 canvas.DrawTriangle(
-                    homo0,
-                    homo1,
-                    homo2,
-                    (in Vector3 barycentric) => shader(i, i + 1, i + 2, barycentric)
+                    vertex0, p0,
+                    vertex1, p1,
+                    vertex2, p2,
+                    pixelShader,
+                    InterpolatorCache<T>.Instance
                 );
-            }
+            });
+
+            //for (int i = 0; i < faces.Count; i += 3)
+            //{
+            //    var (vertex0, p0) = vertexShader(faces[i + 0]);
+            //    var (vertex1, p1) = vertexShader(faces[i + 1]);
+            //    var (vertex2, p2) = vertexShader(faces[i + 2]);
+
+            //    canvas.DrawTriangle(
+            //        vertex0, p0,
+            //        vertex1, p1,
+            //        vertex2, p2,
+            //        pixelShader,
+            //        InterpolatorCache<T>.Instance
+            //    );
+            //}
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using SimpleRenderer.Mathematics;
 
 namespace SimpleRenderer.Core
@@ -52,6 +51,7 @@ namespace SimpleRenderer.Core
         public void Clear(Pixel color, double depth)
         {
             int length = Width * Height;
+
             for (int i = 0; i < length; ++i)
                 ColorBuffer[i] = color;
 
@@ -108,51 +108,6 @@ namespace SimpleRenderer.Core
             }
         }
 
-
-        static int GetBorder(Point t0, Point t, int y)
-        {
-            int dy = t.Y - t0.Y;
-            int dx = t.X - t0.X;
-            return (dx * (y - t0.Y) + dy * t0.X) / dy;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void HorizontalLine(Point t0, Point t1, Point t2, double z0, double z1, double z2, int left, int right, int y, ColorFactory factory)
-        {
-            if (left > right)
-                (left, right) = (right, left);
-
-            left = Math.Max(0, left);
-            right = Math.Min(Width - 1, right);
-
-            int dy12 = t1.Y - t2.Y;
-            int dy20 = t2.Y - t0.Y;
-            int dx21 = t2.X - t1.X;
-            int dx02 = t0.X - t2.X;
-            int dy2 = y - t2.Y;
-            double det = dy12 * dx02 - dx21 * dy20;
-
-            int bufferIdx = left + y * Width;
-            for (int x = left; x <= right; ++x, ++bufferIdx)
-            {
-                int dx2 = (x - t2.X);
-                var alpha0 = (dy12 * dx2 + dx21 * dy2) / det;
-                var alpha1 = (dy20 * dx2 + dx02 * dy2) / det;
-                var alpha2 = 1 - alpha0 - alpha1;
-
-                var depth = alpha0 * z0 + alpha1 * z1 + alpha2 * z2;
-
-                //if (depth < 0 || depth > 1 || depth >= DepthBuffer[bufferIdx])
-                if (depth >= DepthBuffer[bufferIdx])
-                    continue;
-
-                DepthBuffer[bufferIdx] = depth;
-                ColorBuffer[bufferIdx] = factory(new Vector3(alpha0, alpha1, alpha2));
-            }
-        }
-
-        public delegate Pixel ColorFactory(in Vector3 barycentric);
-
         public Vector2 ToScreen(Vector4 @virtual)
         {
             return (
@@ -161,7 +116,12 @@ namespace SimpleRenderer.Core
             );
         }
 
-        public void DrawTriangle(in Vector4 p0, in Vector4 p1, in Vector4 p2, ColorFactory factory)
+        public void DrawTriangle<T>(
+            in T vertex0, in Vector4 p0,
+            in T vertex1, in Vector4 p1,
+            in T vertex2, in Vector4 p2,
+            PixelShader<T> shader, Interpolator<T> interpolator)
+        where T : struct
         {
             Vector2 t0 = ToScreen(p0);
             Vector2 t1 = ToScreen(p1);
@@ -232,7 +192,13 @@ namespace SimpleRenderer.Core
                         continue;
 
                     DepthBuffer[scan] = depth;
-                    ColorBuffer[scan] = factory(barycentric);
+
+                    var color = shader(interpolator(vertex0, vertex1, vertex2, barycentric));
+
+                    if (depth > DepthBuffer[scan])
+                        continue;
+
+                    ColorBuffer[scan] = color;
                 }
             }
         }

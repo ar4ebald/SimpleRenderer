@@ -8,8 +8,21 @@ using SimpleRenderer.Windows;
 
 namespace SimpleRenderer.Samples.Tree
 {
+    public struct Vertex
+    {
+        //public double Value;
+        public Vector3 Normal;
+    }
+
     class Program : HostForm
     {
+        //public static Vertex Keken(in Vertex v0, in Vertex v1, in Vertex v2, in Vector3 barycentric)
+        //{
+        //    var v = v0;
+        //    v.Value = (v0.Value * barycentric.X + v1.Value * barycentric.Y + v2.Value * barycentric.Z);
+        //    return v;
+        //}
+
         static void Main()
         {
             Application.Run(new Program());
@@ -28,7 +41,7 @@ namespace SimpleRenderer.Samples.Tree
 
             _projection = Matrix.Perspective(Math.PI / 180 * 60, 1, 0.1, 1000);
 
-            _lightDirection = new Vector3(1, 1, 1).Normalized;
+            _lightDirection = new Vector3(1, 1, -1).Normalized;
         }
 
         protected override void Update()
@@ -43,7 +56,29 @@ namespace SimpleRenderer.Samples.Tree
 
             var worldViewProjection = world * _projection;
 
-            FillingRenderer.Render(canvas, _model, worldViewProjection, Shader);
+            (Vertex Vertex, Vector4 Position) VertexShader(in Face face)
+            {
+                var position = _model.Vertices[face.Vertex];
+                var normal = _model.Normals[face.Normal];
+
+                var projection = worldViewProjection * (position, 1);
+                normal = (world * (normal, 0)).XYZ.Normalized;
+
+                var vertex = new Vertex { Normal = normal };
+
+                return (vertex, projection);
+            }
+
+            Pixel PixelShader(in Vertex input)
+            {
+                var shade = Vector3.Dot(input.Normal, _lightDirection);
+                shade = Math.Min(1, Math.Max(0, shade * 0.6 + 0.4));
+                byte intensity = (byte)(byte.MaxValue * shade);
+                var color = new Pixel(intensity, intensity, intensity);
+                return color;
+            }
+
+            FillingRenderer.Render(canvas, _model.Faces, VertexShader, PixelShader);
         }
 
         Pixel Shader(int idx0, int idx1, int idx2, in Vector3 barycentric)
@@ -54,7 +89,7 @@ namespace SimpleRenderer.Samples.Tree
             //    (byte)(byte.MaxValue * barycentric.Z)
             //);
 
-            var normal = _model.Normals[_model.Indices[idx0].Normal];
+            var normal = _model.Normals[_model.Faces[idx0].Normal];
             var shade = Vector3.Dot(normal, _lightDirection);
             shade = Math.Min(1, Math.Max(0, shade * 0.6 + 0.4));
             byte intensity = (byte)(byte.MaxValue * shade);
