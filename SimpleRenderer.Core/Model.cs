@@ -8,25 +8,43 @@ namespace SimpleRenderer.Core
 {
     public sealed class Model
     {
-        const string VertexLinePrefix = "v ";
+        const string MaterialNamePrefix = "mtllib ";
+
+        const string UseMtlPrefix = "usemtl ";
+
+        const string VertexLinePrefix  = "v ";
         const string TextureLinePrefix = "vt ";
-        const string NormalLinePrefix = "vn ";
-        const string FaceLinePrefix   = "f ";
+        const string NormalLinePrefix  = "vn ";
+        const string FaceLinePrefix    = "f ";
+
+        const string NewMtlPrefix           = "newmtl ";
+        const string SpecularExponentPrefix = "Ns ";
+        const string AmbientColorPrefix     = "Ka ";
+        const string DiffuseColorPrefix     = "Kd ";
+        const string SpecularColorPrefix    = "Ks ";
+
+        const string AmbientTexturePrefix = "map_Ka ";
+        const string DiffuseTexturePrefix = "map_Kd ";
+
 
         static readonly double _twoSqrtHalf = Math.Sqrt(2) / 2;
+        static readonly char[] _wavefrontLineSeparator = { ' ' };
 
-        Model(IReadOnlyList<Vector3> vertices, IReadOnlyList<Vector2> textureCoords, IReadOnlyList<Vector3> normals, IReadOnlyList<Face> faces)
+
+        Model(IReadOnlyList<Vector3> vertices, IReadOnlyList<Vector2> textureCoords, IReadOnlyList<Vector3> normals, IReadOnlyList<Face> faces, IReadOnlyList<Triangle> triangles)
         {
             Vertices = vertices;
             TextureCoords = textureCoords;
             Normals = normals;
             Faces = faces;
+            Triangles = triangles;
         }
 
         public IReadOnlyList<Vector3> Vertices { get; }
         public IReadOnlyList<Vector2> TextureCoords { get; }
         public IReadOnlyList<Vector3> Normals { get; }
         public IReadOnlyList<Face> Faces { get; }
+        public IReadOnlyList<Triangle> Triangles { get; }
 
         public static Model CreatePlane(double size)
         {
@@ -53,40 +71,129 @@ namespace SimpleRenderer.Core
                 (0, 0, 1)
             };
 
-            var faces = new Face[]
+            var faces = new[]
             {
-                (0, 0, 0), (1, 1, 1), (3, 3, 3),
-                (1, 1, 1), (2, 2, 2), (3, 3, 3)
+                new Face(0, 0, 0), new Face(1, 1, 1),
+                new Face(2, 2, 2), new Face(3, 3, 3),
             };
 
-            return new Model(vertices, textures, normals, faces);
+            var facesIndices = new[]
+            {
+                new Triangle(0, 1, 3, null),
+                new Triangle(1, 2, 3, null)
+            };
+
+            return new Model(vertices, textures, normals, faces, facesIndices);
         }
 
 
-        static readonly char[] _wavefrontLineSeparator = { ' ' };
-
-        public static Model ReadWavefrontObj(TextReader reader)
+        public static Model ReadWavefrontObj(string path)
         {
             var vertices = new List<Vector3>();
             var textureCoords = new List<Vector2>();
             var normals = new List<Vector3>();
             var faces = new List<Face>();
+            var triangles = new List<Triangle>();
 
-            string line;
-            for (int lineNum = 1; (line = reader.ReadLine()) != null; lineNum++)
+            var materialsByName = new Dictionary<string, Material>();
+            var dir = Path.GetDirectoryName(path);
+
+            Material currentMaterial = null;
+
+            using (var reader = new StreamReader(path))
             {
-                if (line.StartsWith(VertexLinePrefix))
-                    vertices.Add(ReadVector3(line, VertexLinePrefix, lineNum));
-                else if (line.StartsWith(TextureLinePrefix))
-                    textureCoords.Add(ReadVector2(line, TextureLinePrefix, lineNum));
-                else if (line.StartsWith(NormalLinePrefix))
-                    normals.Add(ReadVector3(line, NormalLinePrefix, lineNum).Normalized);
-                else if (line.StartsWith(FaceLinePrefix))
-                    ReadFace(line, lineNum, faces);
+                string line;
+                for (int lineNum = 1; (line = reader.ReadLine()) != null; lineNum++)
+                {
+                    line = line.Trim();
+
+                    if (line.StartsWith(UseMtlPrefix))
+                        currentMaterial = materialsByName[line.Substring(UseMtlPrefix.Length)];
+                    else if (line.StartsWith(MaterialNamePrefix))
+                        ReadMaterials(line, dir, materialsByName);
+                    else if (line.StartsWith(VertexLinePrefix))
+                        vertices.Add(ReadVector3(line, VertexLinePrefix, lineNum));
+                    else if (line.StartsWith(TextureLinePrefix))
+                        textureCoords.Add(ReadVector2(line, TextureLinePrefix, lineNum));
+                    else if (line.StartsWith(NormalLinePrefix))
+                        normals.Add(ReadVector3(line, NormalLinePrefix, lineNum).Normalized);
+                    else if (line.StartsWith(FaceLinePrefix))
+                        ReadFace(line, lineNum, currentMaterial, faces, triangles);
+                }
             }
 
-            return new Model(vertices, textureCoords, normals, faces);
+            return new Model(vertices, textureCoords, normals, faces, triangles);
         }
+
+
+        public static void ReadMaterials(string line, string directory, IDictionary<string, Material> materialsByName)
+        {
+            var path = Path.Combine(directory, line.Substring(MaterialNamePrefix.Length));
+
+            Material[] materials;
+            using (var reader = new StreamReader(path))
+                materials = ReadMaterials(reader, directory);
+
+            foreach (var material in materials)
+                materialsByName.Add(material.Name, material);
+        }
+
+        public static Material[] ReadMaterials(TextReader reader, string dir)
+        {
+            string line;
+            var lines = new List<string>();
+            var newMtlIndices = new List<int>();
+            while ((line = reader.ReadLine()) != null)
+            {
+                line = line.Trim();
+
+                if (line.StartsWith(NewMtlPrefix))
+                    newMtlIndices.Add(lines.Count);
+
+                lines.Add(line);
+            }
+
+            var materials = new List<Material>();
+
+            for (int i = 0; i < newMtlIndices.Count; ++i)
+            {
+                string name             = null;
+                double specularExponent = 0;
+
+                Vector3 ambientColor     = default;
+                Vector3 diffuseColor     = default;
+                Vector3 specularColor    = default;
+
+                Texture ambientTexture = null;
+                Texture diffuseTexture = null;
+
+                int end = i + 1 < newMtlIndices.Count ? newMtlIndices[i + 1] : lines.Count;
+
+                for (int j = newMtlIndices[i]; j < end; ++j)
+                {
+                    if (lines[j].StartsWith(NewMtlPrefix))
+                        name = lines[j].Substring(NewMtlPrefix.Length).Trim();
+                    else if (lines[j].StartsWith(AmbientColorPrefix))
+                        ambientColor = ReadVector3(lines[j], AmbientColorPrefix, j + 1);
+                    else if (lines[j].StartsWith(DiffuseColorPrefix))
+                        diffuseColor = ReadVector3(lines[j], DiffuseColorPrefix, j + 1);
+                    else if (lines[j].StartsWith(SpecularColorPrefix))
+                        specularColor = ReadVector3(lines[j], SpecularColorPrefix, j + 1);
+                    else if (lines[j].StartsWith(AmbientTexturePrefix))
+                        ambientTexture = ReadTexture(lines[j], AmbientTexturePrefix, dir);
+                    else if (lines[j].StartsWith(DiffuseTexturePrefix))
+                        diffuseTexture = ReadTexture(lines[j], DiffuseTexturePrefix, dir);
+                    else if (lines[j].StartsWith(SpecularExponentPrefix))
+                        if (!double.TryParse(lines[j].Substring(SpecularExponentPrefix.Length), NumberStyles.Any, CultureInfo.InvariantCulture, out specularExponent))
+                            throw new FormatException($"Invalid specular exponent format at line {j + 1}");
+                }
+
+                materials.Add(new Material(name, specularExponent, ambientColor, diffuseColor, specularColor, ambientTexture, diffuseTexture));
+            }
+
+            return materials.ToArray();
+        }
+
 
         static Vector3 ReadVector3(string line, string linePrefix, int lineNum)
         {
@@ -123,12 +230,12 @@ namespace SimpleRenderer.Core
             return (x, y);
         }
 
-        static void ReadFace(string line, int lineNum, List<Face> faces)
+        static void ReadFace(string line, int lineNum, Material material, List<Face> faces, List<Triangle> triangles)
         {
             var faceIdxStrings = line.Substring(FaceLinePrefix.Length)
                 .Split(_wavefrontLineSeparator, StringSplitOptions.RemoveEmptyEntries);
 
-            var faceIndices = new List<(int Vertex, int Texture, int Normal)>();
+            int facesIndicesBase = faces.Count;
 
             foreach (var idxString in faceIdxStrings)
             {
@@ -148,22 +255,33 @@ namespace SimpleRenderer.Core
                 if (indStr.Length >= 3 && !int.TryParse(indStr[2], NumberStyles.None, CultureInfo.InvariantCulture, out normal))
                     throw new FormatException($"Invalid face format at line {lineNum}");
 
-                faceIndices.Add((vertex - 1, texture - 1, normal - 1));
+                faces.Add(new Face(vertex - 1, texture - 1, normal - 1));
             }
 
-            if (faceIndices.Count < 3)
+            if (faces.Count - facesIndicesBase < 3)
                 throw new FormatException($"Less than 3 indices at line {lineNum}");
 
-            faces.Add(faceIndices[0]);
-            faces.Add(faceIndices[1]);
-            faces.Add(faceIndices[2]);
+            triangles.Add(new Triangle(
+                facesIndicesBase++,
+                facesIndicesBase++,
+                facesIndicesBase,
+                material));
 
-            for (int i = 3; i < faceIndices.Count; ++i)
+            while (++facesIndicesBase < faces.Count)
             {
-                faces.Add(faceIndices[i - 3]);
-                faces.Add(faceIndices[i - 1]);
-                faces.Add(faceIndices[i - 0]);
+                triangles.Add(new Triangle(
+                    facesIndicesBase - 3,
+                    facesIndicesBase - 1,
+                    facesIndicesBase - 0,
+                    material
+                ));
             }
+        }
+
+        static Texture ReadTexture(string line, string prefix, string dir)
+        {
+            var path = Path.Combine(dir, line.Substring(prefix.Length));
+            return Texture.ReadFrom(path);
         }
     }
 }

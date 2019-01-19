@@ -2,7 +2,7 @@
 
 namespace SimpleRenderer.Mathematics
 {
-    public static class Triangle
+    public static class TriangleCollisions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCounterClockwise(in Point p1, in Point p2, in Point p3)

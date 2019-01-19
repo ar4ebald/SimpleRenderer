@@ -1,14 +1,13 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Threading;
 using System.Threading.Tasks;
 using SimpleRenderer.Mathematics;
 
 namespace SimpleRenderer.Core
 {
-    public delegate (T Vertex, Vector4 Position) VertexShader<T>(in Face face) where T : struct;
-    public delegate Pixel PixelShader<T>(in T input) where T : struct;
+    public delegate void VertexShader<T>(in Face face, out T vertex, out Vector4 position) where T : struct;
+    public delegate void PixelShader<T>(Material material, in T input, out Vector3 color) where T : struct;
 
     public enum CullingMode
     {
@@ -19,7 +18,34 @@ namespace SimpleRenderer.Core
 
     public static class FillingRenderer
     {
-        public static void Render<T>(Canvas canvas, IReadOnlyList<Face> faces, VertexShader<T> vertexShader, PixelShader<T> pixelShader, CullingMode culling)
+        public static void Render<T>(Canvas canvas, IReadOnlyList<Face> faces, IReadOnlyList<Triangle> triangles, VertexShader<T> vertexShader, PixelShader<T> pixelShader, CullingMode culling)
+            where T : unmanaged
+        {
+            T[] vertices = ArrayPool<T>.Shared.Rent(faces.Count);
+            try
+            {
+                Vector4[] positions = ArrayPool<Vector4>.Shared.Rent(faces.Count);
+                try
+                {
+                    Parallel.For(
+                        0, faces.Count,
+                        i => vertexShader(faces[i], out vertices[i], out positions[i])
+                    );
+
+                    Render(canvas, triangles, pixelShader, culling, vertices, positions);
+                }
+                finally
+                {
+                    ArrayPool<Vector4>.Shared.Return(positions);
+                }
+            }
+            finally
+            {
+                ArrayPool<T>.Shared.Return(vertices);
+            }
+        }
+
+        static void Render<T>(Canvas canvas, IReadOnlyList<Triangle> triangles, PixelShader<T> pixelShader, CullingMode culling, T[] vertices, Vector4[] positions)
             where T : unmanaged
         {
             int width = canvas.Width;
@@ -32,13 +58,15 @@ namespace SimpleRenderer.Core
 
             var interpolator = InterpolatorCache<T>.Instance;
 
-            Parallel.For(0, faces.Count / 3, i =>
+            Parallel.ForEach(triangles, triangle =>
             {
-                i *= 3;
+                ref var vertex0 = ref vertices[triangle.FaceIndex0];
+                ref var vertex1 = ref vertices[triangle.FaceIndex1];
+                ref var vertex2 = ref vertices[triangle.FaceIndex2];
 
-                var (vertex0, p0) = vertexShader(faces[i + 0]);
-                var (vertex1, p1) = vertexShader(faces[i + 1]);
-                var (vertex2, p2) = vertexShader(faces[i + 2]);
+                ref var p0 = ref positions[triangle.FaceIndex0];
+                ref var p1 = ref positions[triangle.FaceIndex1];
+                ref var p2 = ref positions[triangle.FaceIndex2];
 
                 Vector2 t0 = canvas.ToScreen(p0);
                 Vector2 t1 = canvas.ToScreen(p1);
@@ -53,12 +81,12 @@ namespace SimpleRenderer.Core
                 {
                     case CullingMode.Clockwise:
                     {
-                        if (Triangle.IsCounterClockwise(i0, i1, i2)) return;
+                        if (TriangleCollisions.IsCounterClockwise(i0, i1, i2)) return;
                         break;
                     }
                     case CullingMode.CounterClockwise:
                     {
-                        if (!Triangle.IsCounterClockwise(i0, i1, i2)) return;
+                        if (!TriangleCollisions.IsCounterClockwise(i0, i1, i2)) return;
                         break;
                     }
                 }
@@ -67,8 +95,8 @@ namespace SimpleRenderer.Core
                 if (!viewport.Contains(i0) &&
                     !viewport.Contains(i1) &&
                     !viewport.Contains(i2) &&
-                    !Triangle.Intersects(i2, i1, i0, viewport.BottomLeft, viewport.TopRight, viewport.TopLeft) &&
-                    !Triangle.Intersects(i2, i1, i0, viewport.BottomLeft, viewport.BottomRight, viewport.TopRight))
+                    !TriangleCollisions.Intersects(i2, i1, i0, viewport.BottomLeft, viewport.TopRight, viewport.TopLeft) &&
+                    !TriangleCollisions.Intersects(i2, i1, i0, viewport.BottomLeft, viewport.BottomRight, viewport.TopRight))
                 {
                     return;
                 }
@@ -121,17 +149,19 @@ namespace SimpleRenderer.Core
 
                         double depth = Vector3.Dot(barycentric, (p0.Z, p1.Z, p2.Z));
 
-                        if (depth > depthBuffer[scan])
+                        if (depth < 0 || depth > depthBuffer[scan])
                             continue;
 
                         depthBuffer[scan] = depth;
 
-                        var color = pixelShader(interpolator(vertex0, vertex1, vertex2, barycentric));
+                        T interpolated = interpolator(vertex0, vertex1, vertex2, barycentric);
+                        pixelShader(triangle.Material, interpolated, out Vector3 color);
+                        var pixel = (Pixel)color;
 
                         if (depth > depthBuffer[scan])
                             continue;
 
-                        colorBuffer[scan] = color;
+                        colorBuffer[scan] = pixel;
                     }
                 }
             });

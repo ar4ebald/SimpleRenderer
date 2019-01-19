@@ -14,8 +14,5 @@
         }
 
         public override string ToString() => $"(Vertex:{Vertex}, Texture:{Texture}, Normal:{Normal})";
-
-        public static implicit operator Face((int Vertex, int Texture, int Normal) tuple)
-            => new Face(tuple.Vertex, tuple.Texture, tuple.Normal);
     }
 }
