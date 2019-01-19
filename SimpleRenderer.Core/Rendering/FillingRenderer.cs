@@ -2,9 +2,10 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using SimpleRenderer.Core.Modelling;
 using SimpleRenderer.Mathematics;
 
-namespace SimpleRenderer.Core
+namespace SimpleRenderer.Core.Rendering
 {
     public delegate void VertexShader<T>(in Face face, out T vertex, out Vector4 position) where T : struct;
     public delegate void PixelShader<T>(Material material, in T input, out Vector3 color) where T : struct;

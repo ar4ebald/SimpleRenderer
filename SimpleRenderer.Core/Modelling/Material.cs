@@ -1,7 +1,6 @@
-﻿using System;
-using SimpleRenderer.Mathematics;
+﻿using SimpleRenderer.Mathematics;
 
-namespace SimpleRenderer.Core
+namespace SimpleRenderer.Core.Modelling
 {
     public sealed class Material
     {

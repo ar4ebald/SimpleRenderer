@@ -4,7 +4,7 @@ using System.Globalization;
 using System.IO;
 using SimpleRenderer.Mathematics;
 
-namespace SimpleRenderer.Core
+namespace SimpleRenderer.Core.Modelling
 {
     public sealed class Model
     {

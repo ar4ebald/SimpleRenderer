@@ -1,6 +1,7 @@
-﻿using SimpleRenderer.Mathematics;
+﻿using SimpleRenderer.Core.Modelling;
+using SimpleRenderer.Mathematics;
 
-namespace SimpleRenderer.Core
+namespace SimpleRenderer.Core.Rendering
 {
     public static class WireframeRenderer
     {

@@ -6,7 +6,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using SimpleRenderer.Mathematics;
 
-namespace SimpleRenderer.Core
+namespace SimpleRenderer.Core.Rendering
 {
     static class InterpolatorFactory
     {

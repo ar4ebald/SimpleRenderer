@@ -1,4 +1,4 @@
-﻿namespace SimpleRenderer.Core
+﻿namespace SimpleRenderer.Core.Modelling
 {
     public struct Face
     {

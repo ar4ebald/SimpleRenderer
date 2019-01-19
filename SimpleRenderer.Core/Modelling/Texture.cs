@@ -7,7 +7,7 @@ using SimpleRenderer.Mathematics;
 using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 
-namespace SimpleRenderer.Core
+namespace SimpleRenderer.Core.Modelling
 {
     public sealed class Texture
     {

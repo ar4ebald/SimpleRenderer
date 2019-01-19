@@ -1,6 +1,6 @@
 ﻿using SimpleRenderer.Mathematics;
 
-namespace SimpleRenderer.Core
+namespace SimpleRenderer.Core.Rendering
 {
     public delegate T Interpolator<T>(in T v0, in T v1, in T v2, in Vector3 barycentric) where T : struct;
 

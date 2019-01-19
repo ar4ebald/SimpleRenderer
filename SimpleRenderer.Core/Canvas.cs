@@ -1,4 +1,5 @@
 ﻿using System;
+using SimpleRenderer.Core.Rendering;
 using SimpleRenderer.Mathematics;
 
 namespace SimpleRenderer.Core
