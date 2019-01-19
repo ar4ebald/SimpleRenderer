@@ -111,8 +111,8 @@ namespace SimpleRenderer.Core
             var parts = line.Substring(linePrefix.Length)
                 .Split(_wavefrontLineSeparator, StringSplitOptions.RemoveEmptyEntries);
 
-            if (parts.Length != 2)
-                throw new FormatException($"2 values expected at line {lineNum}");
+            if (parts.Length < 2)
+                throw new FormatException($"At least 2 values expected at line {lineNum}");
 
             if (!double.TryParse(parts[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var x) ||
                 !double.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var y))
@@ -140,10 +140,12 @@ namespace SimpleRenderer.Core
                 if (!int.TryParse(indStr[0], NumberStyles.None, CultureInfo.InvariantCulture, out int vertex))
                     throw new FormatException($"Invalid face format at line {lineNum}");
 
-                if (!int.TryParse(indStr[1], NumberStyles.None, CultureInfo.InvariantCulture, out int texture))
+                int texture = 0;
+                if (indStr.Length >= 2 && !int.TryParse(indStr[1], NumberStyles.None, CultureInfo.InvariantCulture, out texture))
                     throw new FormatException($"Invalid face format at line {lineNum}");
 
-                if (!int.TryParse(indStr[2], NumberStyles.None, CultureInfo.InvariantCulture, out int normal))
+                int normal = 0;
+                if (indStr.Length >= 3 && !int.TryParse(indStr[2], NumberStyles.None, CultureInfo.InvariantCulture, out normal))
                     throw new FormatException($"Invalid face format at line {lineNum}");
 
                 faceIndices.Add((vertex - 1, texture - 1, normal - 1));

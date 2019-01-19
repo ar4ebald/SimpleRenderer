@@ -11,8 +11,6 @@ namespace SimpleRenderer.Core
         public Pixel[] ColorBuffer { get; private set; }
         public double[] DepthBuffer { get; private set; }
 
-        Point _topLeft, _topRight, _bottomLeft, _bottomRight;
-
         public Canvas()
         {
             ColorBuffer = Array.Empty<Pixel>();
@@ -41,11 +39,6 @@ namespace SimpleRenderer.Core
 
             Width = width;
             Height = height;
-
-            _topLeft = (0, Height - 1);
-            _topRight = (Width - 1, Height - 1);
-            _bottomLeft = (0, 0);
-            _bottomRight = (Width - 1, 0);
         }
 
         public void Clear(Pixel color, double depth)
@@ -108,7 +101,7 @@ namespace SimpleRenderer.Core
             }
         }
 
-        public Vector2 ToScreen(Vector4 @virtual)
+        public Vector2 ToScreen(in Vector4 @virtual)
         {
             return (
                 (@virtual.X / @virtual.W + 1) * 0.5 * Width,
@@ -123,84 +116,7 @@ namespace SimpleRenderer.Core
             PixelShader<T> shader, Interpolator<T> interpolator)
         where T : struct
         {
-            Vector2 t0 = ToScreen(p0);
-            Vector2 t1 = ToScreen(p1);
-            Vector2 t2 = ToScreen(p2);
-
-            Point i0 = ((int)(t0.X + 0.5), (int)(t0.Y + 0.5));
-            Point i1 = ((int)(t1.X + 0.5), (int)(t1.Y + 0.5));
-            Point i2 = ((int)(t2.X + 0.5), (int)(t2.Y + 0.5));
-
-            // Check if clockwise. Notice that we check for counter-clockwise due to reflection of y-axis
-            if (Triangle.IsCounterClockwise(i0, i1, i2))
-                return;
-
-            // Check if outside of a viewport
-            if (!Triangle.Intersects(i2, i1, i0, _bottomLeft, _topRight, _topLeft) &&
-                !Triangle.Intersects(i2, i1, i0, _bottomLeft, _bottomRight, _topRight))
-                return;
-
-            // Found bounding box
-            Point boxMin = (
-                Math.Max(0, Math.Min(i0.X, Math.Min(i1.X, i2.X))),
-                Math.Max(0, Math.Min(i0.Y, Math.Min(i1.Y, i2.Y)))
-            );
-            Point boxMax = (
-                Math.Min(Width, Math.Max(i0.X, Math.Max(i1.X, i2.X))),
-                Math.Min(Height, Math.Max(i0.Y, Math.Max(i1.Y, i2.Y)))
-            );
-
-            // Plot points inside triangle using barycentric coordinates
-            int dy23 = i1.Y - i2.Y;
-            int dy13 = i0.Y - i2.Y;
-            int dx32 = i2.X - i1.X;
-            int dx13 = i0.X - i2.X;
-            int det = dy23 * dx13 + dx32 * dy13;
-            int detSign = Math.Sign(det);
-
-            for (int y = boxMin.Y, scanBase = boxMin.Y * Width; y < boxMax.Y; ++y, scanBase += Width)
-            {
-                int dy3 = y - i2.Y;
-
-                for (int x = boxMin.X, scan = scanBase + boxMin.X; x < boxMax.X; ++x, ++scan)
-                {
-                    int dx3 = x - i2.X;
-
-                    int alphaDividend = dy23 * dx3 + dx32 * dy3;
-                    if (alphaDividend * detSign < 0)
-                        continue;
-
-                    int betaDividend = dx13 * dy3 - dy13 * dx3;
-                    if (betaDividend * detSign < 0)
-                        continue;
-
-                    int gammaDividend = det - alphaDividend - betaDividend;
-                    if (gammaDividend * detSign < 0)
-                        continue;
-
-
-                    Vector3 barycentric = (
-                        alphaDividend / (p0.Z * det),
-                        betaDividend / (p1.Z * det),
-                        gammaDividend / (p2.Z * det)
-                    );
-                    barycentric /= (barycentric.X + barycentric.Y + barycentric.Z);
-
-                    double depth = Vector3.Dot(barycentric, (p0.Z, p1.Z, p2.Z));
-
-                    if (depth > DepthBuffer[scan])
-                        continue;
-
-                    DepthBuffer[scan] = depth;
-
-                    var color = shader(interpolator(vertex0, vertex1, vertex2, barycentric));
-
-                    if (depth > DepthBuffer[scan])
-                        continue;
-
-                    ColorBuffer[scan] = color;
-                }
-            }
+            
         }
     }
 }
