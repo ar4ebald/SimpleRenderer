@@ -24,9 +24,6 @@ namespace SimpleRenderer.Core
         static byte GetByte(int triplet, int index) 
             => (byte)((triplet >> (8 * index)) & 0xFF);
 
-        public static implicit operator Pixel((byte r, byte g, byte b) tuple)
-            => new Pixel(tuple.r, tuple.g, tuple.b);
-
         public static implicit operator Pixel(int triplet)
             => new Pixel(GetByte(triplet, 2), GetByte(triplet, 1), GetByte(triplet, 0));
 

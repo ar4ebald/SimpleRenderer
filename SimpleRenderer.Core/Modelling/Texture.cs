@@ -79,7 +79,7 @@ namespace SimpleRenderer.Core.Modelling
                     Pixel* start = (Pixel*)data.Scan0.ToPointer();
                     for (int i = 0; i < colorMap.Length; ++i)
                     {
-                        colorMap[i] = (
+                        colorMap[i] = new Vector3(
                             start[i].R / (double)byte.MaxValue,
                             start[i].G / (double)byte.MaxValue,
                             start[i].B / (double)byte.MaxValue

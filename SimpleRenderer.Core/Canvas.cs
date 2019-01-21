@@ -42,15 +42,35 @@ namespace SimpleRenderer.Core
             Height = height;
         }
 
+        static unsafe void Fill<T>(T[] array, T value, int length, int size) where T : unmanaged
+        {
+            int filled = Math.Min(32, length);
+
+            fixed (T* tPtr = &array[0])
+            {
+                for (int i = 0; i < filled; i++)
+                    tPtr[i] = value;
+
+                byte* bPtr = (byte*)tPtr;
+
+                filled *= size;
+                length *= size;
+
+                while (filled < length)
+                {
+                    int toCopy = 2 * filled < length ? filled : length - filled;
+                    Buffer.MemoryCopy(bPtr, &bPtr[filled], length - filled, toCopy);
+                    filled += toCopy;
+                }
+            }
+        }
+
         public void Clear(Pixel color, double depth)
         {
             int length = Width * Height;
 
-            for (int i = 0; i < length; ++i)
-                ColorBuffer[i] = color;
-
-            for (int i = 0; i < length; ++i)
-                DepthBuffer[i] = depth;
+            Fill(ColorBuffer, color, length, Pixel.Size);
+            Fill(DepthBuffer, depth, length, sizeof(double));
         }
 
         public Point ScreenToIndex(in Vector2 screen)

@@ -20,7 +20,7 @@ namespace SimpleRenderer.Mathematics
         }
 
         public Vector2 XY => (X, Y);
-        public Vector3 XYZ => (X, Y, Z);
+        public Vector3 XYZ => new Vector3(X, Y, Z);
 
         public bool Equals(Vector4 other)
         {

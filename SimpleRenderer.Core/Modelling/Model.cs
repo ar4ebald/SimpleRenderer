@@ -50,12 +50,12 @@ namespace SimpleRenderer.Core.Modelling
         {
             var r = size * _twoSqrtHalf;
 
-            var vertices = new Vector3[]
+            var vertices = new[]
             {
-                (-r, +r, 0),
-                (+r, +r, 0),
-                (+r, -r, 0),
-                (-r, -r, 0)
+                new Vector3(-r, +r, 0),
+                new Vector3(+r, +r, 0),
+                new Vector3(+r, -r, 0),
+                new Vector3(-r, -r, 0)
             };
 
             var textures = new Vector2[]
@@ -66,9 +66,9 @@ namespace SimpleRenderer.Core.Modelling
                 (0, 1)
             };
 
-            var normals = new Vector3[]
+            var normals = new[]
             {
-                (0, 0, 1)
+                new Vector3(0, 0, 1)
             };
 
             var faces = new[]
@@ -210,7 +210,7 @@ namespace SimpleRenderer.Core.Modelling
                 throw new FormatException($"Failed to parse coordinate at line {lineNum}");
             }
 
-            return (x, y, z);
+            return new Vector3(x, y, z);
         }
 
         static Vector2 ReadVector2(string line, string linePrefix, int lineNum)
@@ -248,11 +248,11 @@ namespace SimpleRenderer.Core.Modelling
                     throw new FormatException($"Invalid face format at line {lineNum}");
 
                 int texture = 0;
-                if (indStr.Length >= 2 && !int.TryParse(indStr[1], NumberStyles.None, CultureInfo.InvariantCulture, out texture))
+                if (indStr.Length >= 2 && indStr[1] != string.Empty && !int.TryParse(indStr[1], NumberStyles.None, CultureInfo.InvariantCulture, out texture))
                     throw new FormatException($"Invalid face format at line {lineNum}");
 
                 int normal = 0;
-                if (indStr.Length >= 3 && !int.TryParse(indStr[2], NumberStyles.None, CultureInfo.InvariantCulture, out normal))
+                if (indStr.Length >= 3 && indStr[2] != string.Empty && !int.TryParse(indStr[2], NumberStyles.None, CultureInfo.InvariantCulture, out normal))
                     throw new FormatException($"Invalid face format at line {lineNum}");
 
                 faces.Add(new Face(vertex - 1, texture - 1, normal - 1));
@@ -261,21 +261,31 @@ namespace SimpleRenderer.Core.Modelling
             if (faces.Count - facesIndicesBase < 3)
                 throw new FormatException($"Less than 3 indices at line {lineNum}");
 
-            triangles.Add(new Triangle(
-                facesIndicesBase++,
-                facesIndicesBase++,
-                facesIndicesBase,
-                material));
-
-            while (++facesIndicesBase < faces.Count)
+            for (int i = facesIndicesBase + 2; i < faces.Count; ++i)
             {
                 triangles.Add(new Triangle(
-                    facesIndicesBase - 3,
-                    facesIndicesBase - 1,
-                    facesIndicesBase - 0,
+                    facesIndicesBase,
+                    i - 1,
+                    i,
                     material
                 ));
             }
+
+            //triangles.Add(new Triangle(
+            //    facesIndicesBase,
+            //    facesIndicesBase + 1,
+            //    facesIndicesBase + 2,
+            //    material));
+
+            //while (++facesIndicesBase < faces.Count)
+            //{
+            //    triangles.Add(new Triangle(
+            //        facesIndicesBase - 3,
+            //        facesIndicesBase - 1,
+            //        facesIndicesBase - 0,
+            //        material
+            //    ));
+            //}
         }
 
         static Texture ReadTexture(string line, string prefix, string dir)

@@ -83,6 +83,37 @@ namespace SimpleRenderer.Mathematics
             };
         }
 
+        public static Matrix Rotation(in Quaternion rotation)
+        {
+            double xx = rotation.X * rotation.X;
+            double yy = rotation.Y * rotation.Y;
+            double zz = rotation.Z * rotation.Z;
+            double xy = rotation.X * rotation.Y;
+            double zw = rotation.Z * rotation.W;
+            double zx = rotation.Z * rotation.X;
+            double yw = rotation.Y * rotation.W;
+            double yz = rotation.Y * rotation.Z;
+            double xw = rotation.X * rotation.W;
+
+            return new Matrix
+            {
+                M11 = 1 - 2 * (yy + zz),
+                M12 = 2 * (xy + zw),
+                M13 = 2 * (zx - yw),
+
+                M21 = 2 * (xy - zw),
+                M22 = 1 - 2 * (zz + xx),
+                M23 = 2 * (yz + xw),
+
+                M31 = 2 * (zx + yw),
+                M32 = 2 * (yz - xw),
+                M33 = 1 - 2 * (yy + xx),
+
+                M44 = 1
+            };
+        }
+
+
         public static Matrix Translation(Vector3 position)
         {
             return new Matrix

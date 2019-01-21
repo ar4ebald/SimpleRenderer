@@ -141,14 +141,14 @@ namespace SimpleRenderer.Core.Rendering
                             continue;
 
 
-                        Vector3 barycentric = (
+                        Vector3 barycentric = new Vector3(
                             alphaDividend / (p0.Z * det),
                             betaDividend / (p1.Z * det),
                             gammaDividend / (p2.Z * det)
                         );
-                        barycentric /= (barycentric.X + barycentric.Y + barycentric.Z);
+                        barycentric *= 1 / (barycentric.X + barycentric.Y + barycentric.Z);
 
-                        double depth = Vector3.Dot(barycentric, (p0.Z, p1.Z, p2.Z));
+                        double depth = Vector3.Dot(barycentric, new Vector3(p0.Z, p1.Z, p2.Z));
 
                         if (depth < 0 || depth > depthBuffer[scan])
                             continue;
