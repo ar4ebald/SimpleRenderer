@@ -86,6 +86,37 @@ namespace SimpleRenderer.Core.Modelling
             return new Model(vertices, textures, normals, faces, facesIndices);
         }
 
+        //public static Model CreateBox(double size)
+        //{
+        //    var r = size * 0.5;
+        //    var vertices = new []
+        //    {
+        //        new Vector3(-r, -r, -r),
+        //        new Vector3(-r, -r, +r),
+        //        new Vector3(-r, +r, -r),
+        //        new Vector3(-r, +r, +r),
+        //        new Vector3(+r, -r, -r),
+        //        new Vector3(+r, -r, +r),
+        //        new Vector3(+r, +r, -r),
+        //        new Vector3(+r, +r, +r)
+        //    };
+        //    var uv = new Vector2[]
+        //    {
+        //        (0, 0),
+        //        (0, 1),
+        //        (1, 0),
+        //        (1, 1)
+        //    };
+        //    var normals = new []
+        //    {
+        //        new Vector3(0, 0, +1), 
+        //        new Vector3(0, 0, -1),
+        //        new Vector3(0, +1, 0), 
+        //        new Vector3(0, -1, 0), 
+        //        new Vector3(+1, 0, 0), 
+        //    };
+        //}
+
 
         public static Model ReadWavefrontObj(string path)
         {

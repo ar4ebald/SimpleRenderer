@@ -14,12 +14,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Lowpoly_tree_sample.obj">
+    <Content Include="Models\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\SimpleRenderer.Core\SimpleRenderer.Core.csproj" />
     <ProjectReference Include="..\..\SimpleRenderer.Windows\SimpleRenderer.Windows.csproj" />
   </ItemGroup>
 

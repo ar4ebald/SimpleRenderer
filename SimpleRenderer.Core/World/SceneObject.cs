@@ -29,6 +29,6 @@ namespace SimpleRenderer.Core.World
         {
         }
 
-        public Matrix WorldMatrix => Matrix.Translation(Position) * Matrix.Scale(Scale) * Matrix.Rotation(Rotation);
+        public Matrix WorldMatrix => Matrix.Scale(Scale) * Matrix.Rotation(Rotation) * Matrix.Translation(Position);
     }
 }
